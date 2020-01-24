@@ -1,0 +1,34 @@
+buildVars: [CFLAGS, CXXFLAGS, LDFLAGS]
+buildTools: [cmake]
+buildScript: |
+   CMAKE_SRC_PATH="$1"
+   CMAKE_DEP_PATHS=( "${@:2}" )
+
+   cmakeBuildAll()
+   {
+      mkdir -p build dist
+      local SRC="${1:-$CMAKE_SRC_PATH}"
+      local CMAKE_PREFIX_PATH=
+      local i
+
+      for i in "${CMAKE_DEP_PATHS[@]}" ; do
+         CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+$CMAKE_PREFIX_PATH;}$i"
+      done
+
+      pushd build
+      cmake $SRC \
+         -DCMAKE_INSTALL_PREFIX=/usr \
+         ${CMAKE_PREFIX_PATH:+"-DCMAKE_FIND_ROOT_PATH=${CMAKE_PREFIX_PATH}"}
+      cmake --build .
+      DESTDIR="$PWD/../dist" cmake --install .
+      popd
+   }
+
+packageScript: |
+   CMAKE_BUILD_PATH="$1"
+
+   cmakePackageAll()
+   {
+      cp -a "${1:-$CMAKE_BUILD_PATH}/dist"/* .
+   }
+

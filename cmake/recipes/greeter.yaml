@@ -1,0 +1,19 @@
+root: True
+inherit: [cmake]
+
+depends:
+   - name: cmake
+     use: [tools]
+     forward: True
+   - libgreet
+
+checkoutDeterministic: True
+checkoutScript: |
+   cp -n $<<../src/greeter/CMakeLists.txt>> CMakeLists.txt
+   cp -n $<<../src/greeter/greeter.c>> greeter.c
+
+buildScript: |
+   cmakeBuildAll
+
+packageScript: |
+   cmakePackageAll
