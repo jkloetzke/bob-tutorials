@@ -12,15 +12,15 @@ buildScript: |
       local i
 
       for i in "${CMAKE_DEP_PATHS[@]}" ; do
-         CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+$CMAKE_PREFIX_PATH;}$i"
+         CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+$CMAKE_PREFIX_PATH;}$(cygpath -w "$i")"
       done
 
       pushd build
       cmake $SRC \
-         -DCMAKE_INSTALL_PREFIX=/usr \
-         ${CMAKE_PREFIX_PATH:+"-DCMAKE_FIND_ROOT_PATH=${CMAKE_PREFIX_PATH}"}
-      cmake --build .
-      DESTDIR="$PWD/../dist" cmake --install .
+         -DCMAKE_INSTALL_PREFIX= \
+         ${CMAKE_PREFIX_PATH:+"-DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}"}
+      cmake --build . --config Debug
+      DESTDIR="$PWD/../dist" cmake --install . --config Debug
       popd
    }
 

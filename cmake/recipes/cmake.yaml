@@ -12,11 +12,15 @@ checkoutSCM:
       "$BOB_HOST_PLATFORM" == "win32"
      extract: False
 
-buildScript: |
-   ln -s $1/cmake*.tar.gz
+buildScriptBash: |
+   ln -s $1/cmake*
+packageScriptBash: |
+   tar xf $1/cmake* --strip-components=1
 
-packageScript: |
-   tar xf $1/cmake*.tar.gz --strip-components=1
+#buildScriptPwsh: |
+#        Copy-Item ($args[0] + "/cmake*.zip")
+#packageScriptPwsh: |
+#        python -m zipfile -e ($args[0] + "/cmake*.zip") .
 
 provideTools:
    cmake: bin
