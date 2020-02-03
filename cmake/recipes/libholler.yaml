@@ -1,14 +1,11 @@
 inherit: [cmake]
 
-checkoutDeterministic: True
-checkoutScript: |
-   cp -n $<<../src/libholler/CMakeLists.txt>> CMakeLists.txt
-   cp -n $<<../src/libholler/LibHollerConfig.cmake.in>> LibHollerConfig.cmake.in
-   cp -n $<<../src/libholler/holler.c>> holler.c
-   cp -n $<<../src/libholler/holler.h>> holler.h
+checkoutSCM:
+    scm: import
+    url: src/libholler/
 
 buildScript: |
-   cmakeBuildAll
+    cmakeBuildAll
 
 packageScript: |
    cmakePackageAll

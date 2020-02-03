@@ -7,10 +7,9 @@ depends:
      forward: True
    - libgreet
 
-checkoutDeterministic: True
-checkoutScript: |
-   cp -n $<<../src/greeter/CMakeLists.txt>> CMakeLists.txt
-   cp -n $<<../src/greeter/greeter.c>> greeter.c
+checkoutSCM:
+    scm: import
+    url: src/greeter/
 
 buildScript: |
    cmakeBuildAll

@@ -1,26 +1,28 @@
+
 checkoutSCM:
-   - scm: url
-     url: https://github.com/Kitware/CMake/releases/download/v3.16.3/cmake-3.16.3-Linux-x86_64.tar.gz
-     digestSHA1: a0f48057d8ccb6d4e50e80c77796466315dd2bfb
-     if: !expr |
-      "$BOB_HOST_PLATFORM" == "linux"
-     extract: False
-   - scm: url
-     url: https://github.com/Kitware/CMake/releases/download/v3.16.3/cmake-3.16.3-win32-x86.zip
-     #digestSHA1: 
-     if: !expr |
-      "$BOB_HOST_PLATFORM" == "win32"
-     extract: False
+    - scm: url
+      url: https://github.com/Kitware/CMake/releases/download/v3.16.3/cmake-3.16.3-Linux-x86_64.tar.gz
+      digestSHA1: a0f48057d8ccb6d4e50e80c77796466315dd2bfb
+      if: !expr |
+        "$BOB_HOST_PLATFORM" == "linux"
+      extract: False
+    - scm: url
+      url: https://github.com/Kitware/CMake/releases/download/v3.16.3/cmake-3.16.3-win32-x86.zip
+      digestSHA1: 32f0a475b3a4b49000e8281c955bedaf08afdb8f
+      if: !expr |
+        "$BOB_HOST_PLATFORM" == "win32"
+      extract: False
 
 buildScriptBash: |
-   ln -s $1/cmake*
+    ln -s $1/cmake*
 packageScriptBash: |
-   tar xf $1/cmake* --strip-components=1
+    tar xf $1/cmake* --strip-components=1
 
-#buildScriptPwsh: |
-#        Copy-Item ($args[0] + "/cmake*.zip")
-#packageScriptPwsh: |
-#        python -m zipfile -e ($args[0] + "/cmake*.zip") .
+buildScriptPwsh: |
+    Copy-Item ($args[0] + "/cmake*.zip")
+packageScriptPwsh: |
+    $archive=(Get-Item ($args[0] + "/cmake*.zip")).FullName
+    Check-Command { python -m zipfile -e $archive "." }
 
 provideTools:
    cmake: bin

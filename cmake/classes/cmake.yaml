@@ -1,6 +1,10 @@
 buildVars: [CFLAGS, CXXFLAGS, LDFLAGS]
 buildTools: [cmake]
-buildScript: |
+
+# Bash
+# ====
+
+buildScriptBash: |
    CMAKE_SRC_PATH="$1"
    CMAKE_DEP_PATHS=( "${@:2}" )
 
@@ -24,11 +28,59 @@ buildScript: |
       popd
    }
 
-packageScript: |
+packageScriptBash: |
    CMAKE_BUILD_PATH="$1"
 
    cmakePackageAll()
    {
       cp -a "${1:-$CMAKE_BUILD_PATH}/dist"/* .
    }
+
+# PowerShell
+# ==========
+
+buildScriptPwsh: |
+        $cmakeSrcPath=$args[0]
+        $cmakeDepPaths=$args[1..$args.length]
+
+        function cmakeBuildAll()
+        {
+                param (
+                        [string]$src = $cmakeSrcPath,
+                        [string[]]$cmakeOptions = @()
+                )
+
+                mkdir build -Force
+                mkdir dist -Force
+
+                $cmakePrefixPath=""
+                foreach ($i in $cmakeDepPaths) {
+                        if ($cmakePrefixPath -ne "") {
+                                $cmakePrefixPath += ";"
+                        }
+                        $cmakePrefixPath += $i
+                }
+
+                pushd build
+                Check-Command {
+                        cmake $src `
+                                "-DCMAKE_INSTALL_PREFIX=" `
+                                "-DCMAKE_PREFIX_PATH=$cmakePrefixPath"
+                }
+                Check-Command { cmake --build . --config Debug }
+                Check-Command { cmake --install . --config Debug --prefix "$PWD/../dist" }
+                popd
+        }
+
+packageScriptPwsh: |
+        $cmakeBuildPath=$args[0]
+
+        function cmakePackageAll()
+        {
+                param (
+                        [string]$build = $cmakeBuildPath
+                )
+
+                Copy-Item -Path ($build + "/dist/*") -Destination . -Recurse
+        }
 
