@@ -39,6 +39,7 @@ packageScriptBash: |
 # PowerShell
 # ==========
 
+buildVars: [BOB_HOST_PLATFORM]
 buildScriptPwsh: |
         $cmakeSrcPath=$args[0]
         $cmakeDepPaths=$args[1..$args.length]
@@ -50,8 +51,8 @@ buildScriptPwsh: |
                         [string[]]$cmakeOptions = @()
                 )
 
-                mkdir build -Force
-                mkdir dist -Force
+                New-Item -ItemType "directory" -Path build -Force
+                New-Item -ItemType "directory" -Path dist -Force
 
                 $cmakePrefixPath=""
                 foreach ($i in $cmakeDepPaths) {
@@ -62,13 +63,23 @@ buildScriptPwsh: |
                 }
 
                 pushd build
-                Check-Command {
-                        cmake $src `
-                                "-DCMAKE_INSTALL_PREFIX=" `
-                                "-DCMAKE_PREFIX_PATH=$cmakePrefixPath"
+                if ($Env:BOB_HOST_PLATFORM -eq "win32") {
+                   Check-Command {
+                           cmake $src `
+                                   "-DCMAKE_INSTALL_PREFIX=" `
+                                   "-DCMAKE_PREFIX_PATH=$cmakePrefixPath"
+                   }
+                   Check-Command { cmake --build . --config Debug }
+                   Check-Command { cmake --install . --config Debug --prefix "$PWD/../dist" }
+                } else {
+                   Check-Command {
+                           cmake $src `
+                                   "-DCMAKE_INSTALL_PREFIX=/usr" `
+                                   "-DCMAKE_FIND_ROOT_PATH=$cmakePrefixPath"
+                   }
+                   Check-Command { cmake --build . --config Debug }
+                   Check-Command { cmake --install . --config Debug --prefix "$PWD/../dist" }
                 }
-                Check-Command { cmake --build . --config Debug }
-                Check-Command { cmake --install . --config Debug --prefix "$PWD/../dist" }
                 popd
         }
 

@@ -19,10 +19,16 @@ packageScriptBash: |
     tar xf $1/cmake* --strip-components=1
 
 buildScriptPwsh: |
-    Copy-Item ($args[0] + "/cmake*.zip")
+    Copy-Item ($args[0] + "/cmake-*")
 packageScriptPwsh: |
-    $archive=(Get-Item ($args[0] + "/cmake*.zip")).FullName
-    Check-Command { python -m zipfile -e $archive "." }
+    $archive=(Get-Item ($args[0] + "/cmake-*")).FullName
+    if ($archive -like "*.zip") {
+       Check-Command { python3 -m zipfile -e $archive "." }
+    } else {
+       Check-Command { python3 -m tarfile -e $archive }
+    }
+    Move-Item -Path cmake-*/* -Destination .
+    Remove-Item -Path cmake-*
 
 provideTools:
    cmake: bin
