@@ -1,5 +1,5 @@
-buildVars: [CFLAGS, CXXFLAGS, LDFLAGS]
 buildTools: [cmake]
+buildVars: [BOB_HOST_PLATFORM, CFLAGS, CXXFLAGS, LDFLAGS]
 
 # Bash
 # ====
@@ -10,21 +10,33 @@ buildScriptBash: |
 
    cmakeBuildAll()
    {
-      mkdir -p build dist
       local SRC="${1:-$CMAKE_SRC_PATH}"
-      local CMAKE_PREFIX_PATH=
+      local deps=
       local i
 
-      for i in "${CMAKE_DEP_PATHS[@]}" ; do
-         CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+$CMAKE_PREFIX_PATH;}$(cygpath -w "$i")"
-      done
-
+      mkdir -p build dist
       pushd build
-      cmake $SRC \
-         -DCMAKE_INSTALL_PREFIX= \
-         ${CMAKE_PREFIX_PATH:+"-DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}"}
-      cmake --build . --config Debug
-      DESTDIR="$PWD/../dist" cmake --install . --config Debug
+      if [[ $BOB_HOST_PLATFORM == win32 ]] ; then
+         for i in "${CMAKE_DEP_PATHS[@]}" ; do
+            deps="${deps:+$deps;}$(cygpath -w "$i")"
+         done
+
+         cmake $SRC \
+            -DCMAKE_INSTALL_PREFIX= \
+            ${deps:+"-DCMAKE_PREFIX_PATH=$deps"}
+         cmake --build . --config Debug
+         cmake --install . --config Debug --prefix "$PWD/../dist"
+      else
+         for i in "${CMAKE_DEP_PATHS[@]}" ; do
+            deps="${deps:+$deps;}$i"
+         done
+
+         cmake $SRC \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            ${deps:+"-DCMAKE_FIND_ROOT_PATH=$deps"}
+         cmake --build .
+         DESTDIR="$PWD/../dist" cmake --install .
+      fi
       popd
    }
 
@@ -39,7 +51,6 @@ packageScriptBash: |
 # PowerShell
 # ==========
 
-buildVars: [BOB_HOST_PLATFORM]
 buildScriptPwsh: |
         $cmakeSrcPath=$args[0]
         $cmakeDepPaths=$args[1..$args.length]
@@ -77,8 +88,9 @@ buildScriptPwsh: |
                                    "-DCMAKE_INSTALL_PREFIX=/usr" `
                                    "-DCMAKE_FIND_ROOT_PATH=$cmakePrefixPath"
                    }
-                   Check-Command { cmake --build . --config Debug }
-                   Check-Command { cmake --install . --config Debug --prefix "$PWD/../dist" }
+                   Check-Command { cmake --build . }
+                   $Env:DESTDIR="$PWD/../dist"
+                   Check-Command { cmake --install . }
                 }
                 popd
         }

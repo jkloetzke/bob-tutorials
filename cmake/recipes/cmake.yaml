@@ -23,7 +23,7 @@ buildScriptPwsh: |
 packageScriptPwsh: |
     $archive=(Get-Item ($args[0] + "/cmake-*")).FullName
     if ($archive -like "*.zip") {
-       Check-Command { python3 -m zipfile -e $archive "." }
+       Check-Command { python -m zipfile -e $archive "." }
     } else {
        Check-Command { python3 -m tarfile -e $archive }
     }
